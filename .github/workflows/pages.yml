@@ -31,8 +31,6 @@ jobs:
 
       - name: Build
         run: bun run build:pages
-        env:
-          BASE_PATH: /svelte-datepicker
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
