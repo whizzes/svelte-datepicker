@@ -16,7 +16,7 @@ export default defineConfig({
 			adapter: adapter({ fallback: 'index.html' }),
 
 			paths: {
-				base: process.env.BASE_PATH ?? ''
+				base: '/svelte-datepicker'
 			}
 		})
 	],
