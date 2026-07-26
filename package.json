@@ -16,6 +16,9 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run"
 	},
+	"publishConfig": {
+		"access": "public"
+	},
 	"files": [
 		"dist",
 		"!dist/**/*.test.*",
@@ -33,10 +36,10 @@
 			"svelte": "./dist/index.js"
 		}
 	},
- "repository": {
-    "type": "git",
-    "url": "https://github.com/whizzes/svelte-datepicker"
-  },
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/whizzes/svelte-datepicker.git"
+	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
 	},
