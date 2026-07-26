@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
@@ -12,10 +12,12 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 
-			// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-			// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-			// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-			adapter: adapter()
+			// Prerendered as a static site for GitHub Pages, see .github/workflows/pages.yml.
+			adapter: adapter({ fallback: 'index.html' }),
+
+			paths: {
+				base: process.env.BASE_PATH ?? ''
+			}
 		})
 	],
 	test: {
@@ -42,6 +44,21 @@ export default defineConfig({
 					environment: 'node',
 					include: ['src/**/*.{test,spec}.{js,ts}'],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
+				}
+			},
+
+			{
+				extends: './vite.config.ts',
+				// resolve Svelte's client build (with `mount`) instead of the SSR-only build -
+				// jsdom alone doesn't tell Vite/vite-plugin-svelte to pick the browser condition
+				resolve: {
+					conditions: ['browser']
+				},
+				test: {
+					name: 'jsdom',
+					environment: 'jsdom',
+					setupFiles: ['./test/setup.ts'],
+					include: ['test/**/*.{test,spec}.{js,ts}']
 				}
 			}
 		]

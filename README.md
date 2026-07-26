@@ -1,65 +1,99 @@
-# Svelte library
+# @whizzes/svelte-datepicker
 
-Everything you need to build a Svelte library, powered by [`sv`](https://npmjs.com/package/sv).
+A themeable, locale-aware date picker for Svelte 5. The calendar opens as a small
+floating panel next to its input (no full-screen modal), ships its own styles
+(no Tailwind or external stylesheet required), and uses the native
+[Temporal API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal)
+for all date math instead of a date library like dayjs or date-fns.
 
-Read more about creating a library [in the docs](https://svelte.dev/docs/kit/packaging).
+## Features
 
-## Creating a project
+- Built for Svelte 5 runes (`$props`, `$state`, `$derived`, `$effect`)
+- Locale-aware: weekday/month names and the input text follow any BCP 47 locale
+  tag (`"en-US"`, `"ja-JP"`, `"ar-MA"`, ...), reactively
+- Fully themeable via CSS custom properties, set through a single `theme` prop
+- Floating calendar panel, responsive day grid (CSS container queries)
+- No runtime dependencies beyond Svelte itself
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Requirements
 
-```sh
-# create a new project in the current directory
-npx sv create
+The `Temporal` global must be available in your target runtime/browser. Where
+it isn't, the component degrades gracefully (empty labels, blank grid) instead
+of throwing - see [MDN's Temporal browser compatibility table](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal#browser_compatibility).
 
-# create a new project in my-app
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-bun x sv@0.16.6 create --template library --types ts --add prettier eslint vitest="usages:unit,component" --install bun svelte-datepicker
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Installation
 
 ```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+bun add @whizzes/svelte-datepicker
+# or
+npm install @whizzes/svelte-datepicker
+# or
+pnpm add @whizzes/svelte-datepicker
+# or
+yarn add @whizzes/svelte-datepicker
 ```
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+`svelte` `^5.0.0` is a peer dependency.
 
-## Building
+## Usage
 
-To build your library:
+```svelte
+<script lang="ts">
+	import { DatePicker } from '@whizzes/svelte-datepicker';
+
+	function datepicked(detail: { datepicked: string }) {
+		console.log(detail.datepicked); // '2026-07-26'
+	}
+</script>
+
+<DatePicker ondatepicked={datepicked} locale="en-US" />
+```
+
+### Props
+
+| Prop           | Type                                       | Default                     | Description                                                                                               |
+| -------------- | ------------------------------------------ | --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `ondatepicked` | `(detail: { datepicked: string }) => void` | -                           | Called whenever the selected date changes. `detail.datepicked` is an ISO 8601 date string (`YYYY-MM-DD`). |
+| `customclass`  | `string`                                   | `''`                        | Extra CSS class(es) applied to the text input, alongside the built-in styles.                             |
+| `theme`        | `Partial<DatePickerTheme>`                 | `DEFAULT_DATE_PICKER_THEME` | Overrides any subset of the visual theme.                                                                 |
+| `locale`       | `Intl.LocalesArgument`                     | `'en-GB'`                   | BCP 47 locale tag used to format weekday names, month names and the input text.                           |
+
+### Theming
+
+Every visual aspect is a CSS custom property, set via the `theme` prop - only
+pass the fields you want to override:
+
+```svelte
+<DatePicker theme={{ accentBackground: '#059669', selectedBackground: '#e11d48' }} />
+```
+
+See `DatePickerTheme` (exported from the package) for the full list of
+themeable fields and their defaults.
+
+## Development
 
 ```sh
-npm pack
+bun install
+bun run dev      # dev server for the src/routes showcase/docs app
+bun run check    # type-check
+bun run lint     # prettier --check . && eslint .
+bun run test     # run the test suite once
+bun run build    # build the publishable package into dist/
 ```
 
-To create a production version of your showcase app:
+`src/lib/` is the published library; `src/routes/` is a SvelteKit showcase app
+used for local development and documentation, not published to npm.
 
-```sh
-npm run build
-```
+## Release
 
-You can preview the production build with `npm run preview`.
+Releases are published manually to npm:
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+1. Bump `version` in `package.json` (semver).
+2. Run `bun run build` - this runs `svelte-kit sync`, `svelte-package` (builds
+   `src/lib` into `dist/`) and `publint` (validates the package before publish).
+3. Commit and tag the release: `git tag vX.Y.Z && git push --tags`.
+4. Publish: `npm publish` (or `bun publish`).
 
-## Publishing
+## License
 
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
-
-To publish your library to [npm](https://www.npmjs.com):
-
-```sh
-npm publish
-```
+[MIT](./LICENSE) © Whizzes
