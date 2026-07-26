@@ -11,13 +11,7 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-
-			// Prerendered as a static site for GitHub Pages, see .github/workflows/pages.yml.
 			adapter: adapter({ fallback: 'index.html' }),
-
-			paths: {
-				base: '/svelte-datepicker'
-			}
 		})
 	],
 	test: {
