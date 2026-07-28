@@ -46,9 +46,9 @@ All `DatePicker` state and behavior lives in `src/lib/DatePicker.ts` (`export cl
 
 The `locale` prop seeds construction once, read via `untrack(() => locale)` - re-running `new DatePicker(...)` on every prop change would blow away open/selected state. Instead, a tracked `$effect` calls `datePicker.setLocale(locale)` on every change, which updates an internal `_locale` writable. Everything locale-dependent (`arrDays`, `monthNames`, `monthYearLabel`, `yearLabel`, `displayText`) is a `derived` store off `_locale`, not a value computed once - follow this pattern for any new locale-dependent data.
 
-### Temporal, not a date library
+### Native `Date`, not a date library
 
-All date math uses the TC39 `Temporal` global (`Temporal.PlainDate`, `Temporal.Now`) - no dayjs/date-fns/luxon. `Temporal` is not available in Node (SSR) or in browsers without support, so every call site guards with a local `hasTemporal()` check and degrades gracefully (blank grid, empty labels) rather than throwing. TypeScript has no official `Temporal` types yet, so `src/lib/temporal.d.ts` hand-declares the minimal ambient surface actually used (`PlainDate.from`, `.add`, `.toLocaleString`, etc.) - extend it if a call site needs another `Temporal` member.
+All date math uses the built-in `Date` (`new Date(year, month - 1, day)`, `.getDate()`/`.getMonth()`/`.getFullYear()`/`.getDay()`, `.toLocaleString()`) - no dayjs/date-fns/luxon, no Temporal. `Date` is always available in Node (SSR) and browsers, so there's no feature-detection guard like the old `hasTemporal()` - call sites can rely on it unconditionally. ISO date strings (`YYYY-MM-DD`) are built/parsed manually rather than via `.toISOString()`, to stay in local time and avoid UTC-shift bugs.
 
 ### Theming via CSS custom properties
 
