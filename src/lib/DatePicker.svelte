@@ -10,9 +10,6 @@
 	 *  theme={{ accentBackground: '#059669' }}   (facultative) partial DatePickerTheme override
 	 * />
 	 *
-	 * Requires browser support for Temporal (see
-	 * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal)
-	 *
 	 * Styles ship with the component (no Tailwind/stylesheet needed by the consumer).
 	 * Every visual aspect is overridable via the `theme` prop - see DatePickerTheme in ./theme.ts
 	 */

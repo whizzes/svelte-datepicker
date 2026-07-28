@@ -22,7 +22,6 @@
 	const badges = [
 		'Svelte 5',
 		'TypeScript',
-		'Temporal API',
 		'Zero Tailwind dependency',
 		'Themeable'
 	];
@@ -154,10 +153,9 @@
 
 		<h1><span class="grad">Svelte</span> DatePicker</h1>
 		<p class="tagline">
-			A themeable, locale-aware date picker built on runes, Svelte stores and the
-			<a
-				href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal"
-				>Temporal API</a
+			A themeable, locale-aware date picker built on runes, Svelte stores and the native
+			<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date"
+				>Date API</a
 			>. No Tailwind or stylesheet required by consumers.
 		</p>
 

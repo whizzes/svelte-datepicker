@@ -12,20 +12,20 @@ export interface SelectedDate {
 	day: number;
 }
 
+function pad(value: number): string {
+	return String(value).padStart(2, '0');
+}
+
+function toISODate(year: number, month: number, day: number): string {
+	return `${year}-${pad(month)}-${pad(day)}`;
+}
+
 function parseInputTxt(value: string): SelectedDate | null {
 	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
 	if (!match) {
 		return null;
 	}
 	return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
-}
-
-function hasTemporal(): boolean {
-	return typeof Temporal !== 'undefined';
-}
-
-function today(): Temporal.PlainDate | null {
-	return hasTemporal() ? Temporal.Now.plainDateISO() : null;
 }
 
 function initRows(): number[][] {
@@ -38,27 +38,18 @@ function toReadable<T>(store: { subscribe: Readable<T>['subscribe'] }): Readable
 
 function buildMonthNames(locale: Intl.LocalesArgument): string[] {
 	return Array.from({ length: 12 }, (_, i) => {
-		if (!hasTemporal()) {
-			return String(i + 1);
-		}
-		const label = Temporal.PlainDate.from({ year: 2000, month: i + 1, day: 1 }).toLocaleString(
-			locale,
-			{
-				month: 'short'
-			}
-		);
+		const label = new Date(2000, i, 1).toLocaleString(locale, { month: 'short' });
 		return label.charAt(0).toUpperCase() + label.slice(1);
 	});
 }
 
 function buildWeekdayNames(locale: Intl.LocalesArgument): string[] {
-	if (!hasTemporal()) {
-		return [...ARR_DAYS];
-	}
 	// 2024-01-01 is a Monday - the grid always starts the week on Monday (see refreshRows' startCol)
-	const monday = Temporal.PlainDate.from({ year: 2024, month: 1, day: 1 });
+	const monday = new Date(2024, 0, 1);
 	return Array.from({ length: 7 }, (_, i) => {
-		const label = monday.add({ days: i }).toLocaleString(locale, { weekday: 'short' });
+		const day = new Date(monday);
+		day.setDate(monday.getDate() + i);
+		const label = day.toLocaleString(locale, { weekday: 'short' });
 		return label.charAt(0).toUpperCase() + label.slice(1);
 	});
 }
@@ -99,12 +90,12 @@ export class DatePicker {
 	private selectedYearValue: number;
 
 	constructor(locale: Intl.LocalesArgument = 'en-GB') {
-		const now = today();
+		const now = new Date();
 
 		this._locale = writable(locale);
-		this.currentDay = now?.day ?? 1;
-		this.currentMonth = now?.month ?? 1;
-		this.currentYear = now?.year ?? 1970;
+		this.currentDay = now.getDate();
+		this.currentMonth = now.getMonth() + 1;
+		this.currentYear = now.getFullYear();
 
 		this.selectedMonthValue = this.currentMonth;
 		this.selectedYearValue = this.currentYear;
@@ -132,9 +123,7 @@ export class DatePicker {
 			this.formatDisplayText(value, currentLocale)
 		);
 
-		if (now) {
-			this._inputTxt.set(now.toString());
-		}
+		this._inputTxt.set(toISODate(this.currentYear, this.currentMonth, this.currentDay));
 		this.refreshRows();
 	}
 
@@ -202,60 +191,48 @@ export class DatePicker {
 	}
 
 	selectDate(year: number, month: number, day: number): void {
-		if (hasTemporal()) {
-			this._inputTxt.set(Temporal.PlainDate.from({ year, month, day }).toString());
-		}
+		this._inputTxt.set(toISODate(year, month, day));
 		this.close();
 	}
 
 	/** Falls back to the raw value while it isn't a full parseable date (eg. mid-typing). */
 	private formatDisplayText(value: string, locale: Intl.LocalesArgument): string {
 		const parsed = parseInputTxt(value);
-		if (!parsed || !hasTemporal()) {
+		if (!parsed) {
 			return value;
 		}
-		return Temporal.PlainDate.from(parsed).toLocaleString(locale, { dateStyle: 'medium' });
+		return new Date(parsed.year, parsed.month - 1, parsed.day).toLocaleString(locale, {
+			dateStyle: 'medium'
+		});
 	}
 
 	private formatMonthYear(month: number, year: number): string {
-		if (!hasTemporal()) {
-			return '';
-		}
-		const label = Temporal.PlainDate.from({ year, month, day: 1 }).toLocaleString(
-			get(this.locale),
-			{
-				month: 'long',
-				year: 'numeric'
-			}
-		);
+		const label = new Date(year, month - 1, 1).toLocaleString(get(this.locale), {
+			month: 'long',
+			year: 'numeric'
+		});
 		return label.charAt(0).toUpperCase() + label.slice(1);
 	}
 
 	private refreshRows(): void {
 		const rows = initRows();
-		if (hasTemporal()) {
-			const firstOfMonth = Temporal.PlainDate.from({
-				year: this.selectedYearValue,
-				month: this.selectedMonthValue,
-				day: 1
-			});
-			const startCol = firstOfMonth.dayOfWeek - 1; // dayOfWeek: 1=Monday..7=Sunday -> 0=Lu..6=Di
-			const lastDay = firstOfMonth.daysInMonth;
-			let start = false;
-			let cpt = 0;
-			for (let iRow = 0; iRow < 6; iRow++) {
-				for (let iCol = 0; iCol < 7; iCol++) {
-					if (cpt > lastDay) {
-						break;
-					}
-					if (!start && iCol === startCol) {
-						cpt++;
-						start = true;
-					}
-					rows[iRow][iCol] = cpt;
-					if (start) {
-						cpt++;
-					}
+		const firstOfMonth = new Date(this.selectedYearValue, this.selectedMonthValue - 1, 1);
+		const startCol = (firstOfMonth.getDay() + 6) % 7; // getDay: 0=Sun..6=Sat -> 0=Mon..6=Sun
+		const lastDay = new Date(this.selectedYearValue, this.selectedMonthValue, 0).getDate();
+		let start = false;
+		let cpt = 0;
+		for (let iRow = 0; iRow < 6; iRow++) {
+			for (let iCol = 0; iCol < 7; iCol++) {
+				if (cpt > lastDay) {
+					break;
+				}
+				if (!start && iCol === startCol) {
+					cpt++;
+					start = true;
+				}
+				rows[iRow][iCol] = cpt;
+				if (start) {
+					cpt++;
 				}
 			}
 		}
