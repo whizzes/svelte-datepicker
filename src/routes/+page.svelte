@@ -19,12 +19,7 @@
 		{ title: 'DatePicker Beispiel', locale: 'de-DE' }
 	];
 
-	const badges = [
-		'Svelte 5',
-		'TypeScript',
-		'Zero Tailwind dependency',
-		'Themeable'
-	];
+	const badges = ['Svelte 5', 'TypeScript', 'Zero Tailwind dependency', 'Themeable'];
 
 	// matches the docs page's own dark palette, passed to every example below
 	const darkTheme = {
@@ -154,7 +149,8 @@
 		<h1><span class="grad">Svelte</span> DatePicker</h1>
 		<p class="tagline">
 			A themeable, locale-aware date picker built on runes, Svelte stores and the native
-			<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date"
+			<a
+				href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date"
 				>Date API</a
 			>. No Tailwind or stylesheet required by consumers.
 		</p>
