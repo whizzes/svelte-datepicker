@@ -16,8 +16,7 @@
 		"test": "vitest"
 	},
 	"publishConfig": {
-		"access": "public",
-		"registry": "https://npm.pkg.github.com"
+		"access": "public"
 	},
 	"files": [
 		"dist",
